@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect
 app = Flask(__name__)
 
 data = {
-    "title": "NBA Prizm Break",
+    "title": "NFL Prizm Break",
     "pack": 1,
     "last_hit": "None"
 }
@@ -19,4 +19,4 @@ def control():
         data["last_hit"] = request.form["last_hit"]
     return render_template("control.html", data=data)
 
-app.run(debug=True)
+app.run(host="0.0.0.0", port=5000, debug=True)
