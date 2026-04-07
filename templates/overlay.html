@@ -2,21 +2,37 @@
 <html>
 <head>
 <link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="/static/confetti.js"></script>
 </head>
 <body>
 <div class="overlay">
-  <h1>{{ data.title }}</h1>
-  <p>Pack: {{ data.pack }}</p>
-  <p>Buyer: {{ data.current_buyer }}</p>
-  <p>Last Hit: {{ data.last_hit }}</p>
+  <h1 id="title">{{ data.title }}</h1>
+  <p id="pack">Pack: {{ data.pack }}</p>
+  <p id="buyer">Buyer: {{ data.current_buyer }}</p>
+  <p id="last_hit">Last Hit: {{ data.last_hit }}</p>
+  <div id="big_hit" style="display:none;">🔥 BIG HIT! 🔥</div>
+<div>
 
-  {% if data.big_hit %}
-  <div id="big-hit">🔥 BIG HIT! 🔥</div>
-  <script src="/static/confetti.js"></script>
-  {% endif %}
-</div>
+<script>
+    const socket = io();
 
-<!-- Auto-refresh every 2 seconds -->
-<meta http-equiv="refresh" content="2">
+    socket.on('update', (data) => {
+        document.getElementId('pack').innerText = "Pack: " + data.pack;
+        document.getElementId('buyer').innerText = "Buyer: " + data.current_buyer;
+        document.getElementId('last_hit')innerText = "Last Hit: " + data.last_hit;
+
+        if (data.big_hit) {
+            const bh = document.getElementById('big-hit');
+            bh.style.display = "block";
+            bh.classList.add('pop');
+            // trigger confetti
+            launchConfetti();
+            // hide after 3 seconds
+            setTimeout(() => { bh.style.display = "none"; }, 3000);
+    }
+});
+
+</script>
 </body>
 </html>

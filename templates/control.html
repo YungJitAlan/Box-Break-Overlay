@@ -1,5 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<h1>Control Panel</h1>
 <form method="POST">
-    <input name="pack" placeholder="Pack #" />
-    <input name="last_hit" placeholder="Last Hit" />
-    <button type="submit">Update</button>
+  <label>Pack #:</label>
+  <input name="pack" value="{{ data.pack }}"><br>
+
+  <label>Last Hit:</label>
+  <input name="last_hit" value="{{ data.last_hit }}"><br>
+
+  <label>Buyer:</label>
+  <input name="current_buyer" value="{{ data.current_buyer }}"><br>
+
+  <label>Big Hit?</label>
+  <input type="checkbox" name="big_hit"><br>
+
+  <button type="submit">Update Overlay</button>
 </form>
+</body>
+</html>
