@@ -1,34 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-  body {
-    margin: 0;
-    background: transparent;
-    color: white;
-    font-family: Arial, sans-serif;
-  }
-  .overlay {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-</style>
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 <div class="overlay">
   <h1>{{ data.title }}</h1>
   <p>Pack: {{ data.pack }}</p>
+  <p>Buyer: {{ data.current_buyer }}</p>
   <p>Last Hit: {{ data.last_hit }}</p>
 
-<meta http-equiv="refresh" content="2">
-<div id="big-hit" style="display:none; color: gold; font-size: 50px;">
-    BIG HIT! 🔥 {{ data.last_hit }}
+  {% if data.big_hit %}
+  <div id="big-hit">🔥 BIG HIT! 🔥</div>
+  <script src="/static/confetti.js"></script>
+  {% endif %}
 </div>
-<p>Current Buyer: {{ data.current_buyer }}</p>
 
+<!-- Auto-refresh every 2 seconds -->
+<meta http-equiv="refresh" content="2">
 </body>
 </html>
