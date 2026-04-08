@@ -3,6 +3,7 @@
 <head>
 <link rel="stylesheet" href="/static/style.css">
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script src="/static/confetti.js"></script>
 </head>
 <body>
@@ -12,24 +13,26 @@
   <p id="buyer">Buyer: {{ data.current_buyer }}</p>
   <p id="last_hit">Last Hit: {{ data.last_hit }}</p>
   <div id="big_hit" style="display:none;">🔥 BIG HIT! 🔥</div>
-<div>
+</div>
 
 <script>
     const socket = io();
 
     socket.on('update', (data) => {
-        document.getElementId('pack').innerText = "Pack: " + data.pack;
-        document.getElementId('buyer').innerText = "Buyer: " + data.current_buyer;
-        document.getElementId('last_hit')innerText = "Last Hit: " + data.last_hit;
+        document.getElementById('pack').innerText = "Pack: " + data.pack;
+        document.getElementById('buyer').innerText = "Buyer: " + data.current_buyer;
+        document.getElementById('last_hit').innerText = "Last Hit: " + data.last_hit;
 
         if (data.big_hit) {
-            const bh = document.getElementById('big-hit');
+            const bh = document.getElementById('big_hit');
             bh.style.display = "block";
             bh.classList.add('pop');
             // trigger confetti
             launchConfetti();
             // hide after 3 seconds
-            setTimeout(() => { bh.style.display = "none"; }, 3000);
+            setTimeout(() => {
+              bh.style.display = "none";
+            }, 3000);
     }
 });
 
