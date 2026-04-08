@@ -6,6 +6,7 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script src="/static/confetti.js"></script>
 </head>
+
 <body>
 <div class="overlay">
   <h1 id="title">{{ data.title }}</h1>
@@ -27,9 +28,7 @@
             const bh = document.getElementById('big_hit');
             bh.style.display = "block";
             bh.classList.add('pop');
-            // trigger confetti
             launchConfetti();
-            // hide after 3 seconds
             setTimeout(() => {
               bh.style.display = "none";
             }, 3000);
