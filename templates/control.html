@@ -1,24 +1,70 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-<h1>Control Panel</h1>
-<form method="POST">
-    <label>Pack #:</label>
-    <input name="pack" value="{{ data.pack }}"><br>
+<h1>Box Break Controller</h1>
 
-    <label>Last Hit:</label>
-    <input name="last_hit" value="{{ data.last_hit }}"><br>
+<p>Remaining Teams: <span id="remaining">32</span></p>
 
-    <label>Buyer:</label>
-    <input name="current_buyer" value="{{ data.current_buyer }}"><br>
+<label>Pack:</label>
+<input id="pack" type="number">
 
-    <label>Big Hit?</label>
-    <input type="checkbox" name="big_hit"><br>
+<label>Last Hit:</label>
+<input id="last_hit" type="text">
 
-    <button type="submit">Update Overlay</button>
-</form>
-</body>
-</html>
+<label>Big Hit</label>
+<input id="big_hit" type="checkbox">
+
+<button onclick="sendUpdate()">Update</button>
+<button onclick="resetBreak()">Reset Break</button>
+
+<h2>Teams</h2>
+<div id="teams"></div>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+const socket = io();
+
+const teams = {{ teams | tojson }};
+
+function renderTeams(teams){
+    const container = document.getElementById('teams');
+    container.innerHTML = "";
+
+    for(const team in teams){
+        const t = teams[team];
+
+        const btn = document.createElement("button");
+        btn.innerText = t.sold ? `${team} (${t.buyer})` : team;
+
+        btn.style.background = t.sold ? "green" : "gray";
+
+        btn.onclick = () => {
+            const buyer = prompt("Enter buyer name:");
+            if(!buyer) return;
+
+            socket.emit('select_team', {
+                team: team,
+                buyer: buyer
+            });
+        };
+
+        container.appendChild(btn);
+    }
+}
+
+function sendUpdate(){
+    socket.emit('update_data', {
+        pack: document.getElementById('pack').value,
+        last_hit: document.getElementById('last_hit').value,
+        big_hit: document.getElementById('big_hit').checked
+    });
+}
+
+function resetBreak(){
+    socket.emit('reset');
+}
+
+socket.on('update', payload => {
+    renderTeams(payload.teams);
+    document.getElementById('remaining').innerText = payload.remaining;
+});
+
+renderTeams(teams);
+</script>

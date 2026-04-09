@@ -1,53 +1,46 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="/static/style.css">
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-</head>
-<body>
-    <div class="overlay">
-        <h1 id="title">{{ data.title }}</h1>
-        <p id="pack">Pack: {{ data.pack }}</p>
-        <p id="last_hit">Last Hit: {{ data.last_hit }}</p>
-        <p id="buyer">Buyer: {{ data.current_buyer }}</p>
-        <div id="big_hit" style="display:none;">🔥 BIG HIT! 🔥</div>
+<div>
+  <h1 id="pack"></h1>
+  <h2 id="last_hit"></h2>
+  <h3 id="remaining"></h3>
+  <div id="teams"></div>
+  <div id="big_hit" style="display:none;">🔥 BIG HIT 🔥</div>
+</div>
 
-        <div id="teams-container">
-            {% for team in teams %}
-                <div class="team" data-team="{{ team }}">{{ team }}</div>
-            {% endfor %}
-        </div>
-    </div>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
 const socket = io();
 
-document.querySelectorAll('.team').forEach(el => {
-    el.addEventListener('click', () => {
-        const team = el.getAttribute('data-team');
-        socket.emit('team_select', {team: team});
-    });
-});
+function renderTeams(teams){
+    const container = document.getElementById('teams');
+    container.innerHTML = "";
 
-socket.on('update', data => {
-    document.getElementById('pack').innerText = "Pack: " + data.pack;
-    document.getElementById('last_hit').innerText = "Last Hit: " + data.last_hit;
-    document.getElementById('buyer').innerText = "Buyer: " + data.current_buyer;
+    for(const team in teams){
+        const t = teams[team];
 
-    document.querySelectorAll('.team').forEach(el => {
-        el.style.backgroundColor = el.getAttribute('data-team') === data.current_buyer ? 'gold' : '#222';
-    });
+        const div = document.createElement("div");
+        div.innerText = t.sold ? `${team} - ${t.buyer}` : team;
+        div.style.color = t.sold ? "lime" : "white";
 
-    if(data.big_hit){
+        container.appendChild(div);
+    }
+}
+
+socket.on('update', payload => {
+    renderTeams(payload.teams);
+
+    document.getElementById('pack').innerText = "Pack: " + payload.data.pack;
+    document.getElementById('last_hit').innerText = "Last Hit: " + payload.data.last_hit;
+    document.getElementById('remaining').innerText = "Remaining: " + payload.remaining;
+
+    if(payload.data.big_hit){
         const bh = document.getElementById('big_hit');
         bh.style.display = "block";
 
-        confetti({ particleCount: 150, spread: 100, origin: { y: 0.6 } });
+        confetti({ particleCount: 150, spread: 100 });
 
         setTimeout(() => bh.style.display = "none", 3000);
     }
 });
 </script>
-</body>
-</html>
