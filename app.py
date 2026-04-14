@@ -1,8 +1,12 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret"
+
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 DEFAULT_TEAMS = [
@@ -66,8 +70,6 @@ def handle_update_data(data):
     break_data["last_hit"] = data.get("last_hit", "")
     break_data["big_hit"] = data.get("big_hit", False)
     broadcast_update()
-
-    # reset big_hit after sending once
     break_data["big_hit"] = False
 
 
