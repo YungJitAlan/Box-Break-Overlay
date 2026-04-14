@@ -1,46 +1,66 @@
-<div>
-  <h1 id="pack"></h1>
-  <h2 id="last_hit"></h2>
-  <h3 id="remaining"></h3>
-  <div id="teams"></div>
-  <div id="big_hit" style="display:none;">🔥 BIG HIT 🔥</div>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Box Break Overlay</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="overlay">
+    <h1 id="pack_display"></h1>
+    <h2 id="last_hit_display"></h2>
+    <h3 id="remaining_display"></h3>
+    <div id="teams-container"></div>
+    <div id="big_hit_display">🔥 BIG HIT 🔥</div>
+  </div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    const socket = io();
 
-<script>
-const socket = io();
+    function renderTeams(teams) {
+      const container = document.getElementById('teams-container');
+      container.innerHTML = "";
 
-function renderTeams(teams){
-    const container = document.getElementById('teams');
-    container.innerHTML = "";
-
-    for(const team in teams){
+      for (const team in teams) {
         const t = teams[team];
-
         const div = document.createElement("div");
+        div.className = "team";
         div.innerText = t.sold ? `${team} - ${t.buyer}` : team;
         div.style.color = t.sold ? "lime" : "white";
-
         container.appendChild(div);
+      }
     }
-}
 
-socket.on('update', payload => {
-    renderTeams(payload.teams);
+    socket.on('update', payload => {
+      renderTeams(payload.teams);
 
-    document.getElementById('pack').innerText = "Pack: " + payload.data.pack;
-    document.getElementById('last_hit').innerText = "Last Hit: " + payload.data.last_hit;
-    document.getElementById('remaining').innerText = "Remaining: " + payload.remaining;
+      document.getElementById('pack_display').innerText =
+        "Pack: " + (payload.data.pack || "");
+      document.getElementById('last_hit_display').innerText =
+        "Last Hit: " + (payload.data.last_hit || "");
+      document.getElementById('remaining_display').innerText =
+        "Remaining: " + payload.remaining;
 
-    if(payload.data.big_hit){
-        const bh = document.getElementById('big_hit');
+      if (payload.data.big_hit) {
+        const bh = document.getElementById('big_hit_display');
         bh.style.display = "block";
+        bh.classList.remove("pop");
+        void bh.offsetWidth;
+        bh.classList.add("pop");
 
-        confetti({ particleCount: 150, spread: 100 });
+        confetti({
+          particleCount: 150,
+          spread: 100
+        });
 
-        setTimeout(() => bh.style.display = "none", 3000);
-    }
-});
-</script>
+        setTimeout(() => {
+          bh.style.display = "none";
+          bh.classList.remove("pop");
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>

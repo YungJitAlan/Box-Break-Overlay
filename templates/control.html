@@ -1,70 +1,79 @@
-<h1>Box Break Controller</h1>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Box Break Controller</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <h1>Box Break Controller</h1>
 
-<p>Remaining Teams: <span id="remaining">32</span></p>
+  <p>Remaining Teams: <span id="remaining">32</span></p>
 
-<label>Pack:</label>
-<input id="pack" type="number">
+  <label>Pack:</label>
+  <input id="pack" type="number">
 
-<label>Last Hit:</label>
-<input id="last_hit" type="text">
+  <label>Last Hit:</label>
+  <input id="last_hit" type="text">
 
-<label>Big Hit</label>
-<input id="big_hit" type="checkbox">
+  <label>Big Hit</label>
+  <input id="big_hit" type="checkbox">
 
-<button onclick="sendUpdate()">Update</button>
-<button onclick="resetBreak()">Reset Break</button>
+  <button onclick="sendUpdate()">Update</button>
+  <button onclick="resetBreak()">Reset Break</button>
 
-<h2>Teams</h2>
-<div id="teams"></div>
+  <h2>Teams</h2>
+  <div id="teams"></div>
 
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-const socket = io();
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const socket = io();
+    const teams = {{ teams | tojson }};
 
-const teams = {{ teams | tojson }};
+    function renderTeams(teams) {
+      const container = document.getElementById('teams');
+      container.innerHTML = "";
 
-function renderTeams(teams){
-    const container = document.getElementById('teams');
-    container.innerHTML = "";
-
-    for(const team in teams){
+      for (const team in teams) {
         const t = teams[team];
 
         const btn = document.createElement("button");
+        btn.className = "team-button";
         btn.innerText = t.sold ? `${team} (${t.buyer})` : team;
-
         btn.style.background = t.sold ? "green" : "gray";
 
         btn.onclick = () => {
-            const buyer = prompt("Enter buyer name:");
-            if(!buyer) return;
+          const buyer = prompt("Enter buyer name:");
+          if (!buyer) return;
 
-            socket.emit('select_team', {
-                team: team,
-                buyer: buyer
-            });
+          socket.emit('select_team', {
+            team: team,
+            buyer: buyer
+          });
         };
 
         container.appendChild(btn);
+      }
     }
-}
 
-function sendUpdate(){
-    socket.emit('update_data', {
+    function sendUpdate() {
+      socket.emit('update_data', {
         pack: document.getElementById('pack').value,
         last_hit: document.getElementById('last_hit').value,
         big_hit: document.getElementById('big_hit').checked
+      });
+    }
+
+    function resetBreak() {
+      socket.emit('reset');
+    }
+
+    socket.on('update', payload => {
+      renderTeams(payload.teams);
+      document.getElementById('remaining').innerText = payload.remaining;
     });
-}
 
-function resetBreak(){
-    socket.emit('reset');
-}
-
-socket.on('update', payload => {
-    renderTeams(payload.teams);
-    document.getElementById('remaining').innerText = payload.remaining;
-});
-
-renderTeams(teams);
-</script>
+    renderTeams(teams);
+  </script>
+</body>
+</html>
