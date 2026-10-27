@@ -1,65 +1,255 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Box Break Overlay</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="overlay">
-    <h1 id="pack_display"></h1>
-    <h2 id="last_hit_display"></h2>
-    <h3 id="remaining_display"></h3>
-    <div id="teams-container"></div>
-    <div id="big_hit_display">🔥 BIG HIT 🔥</div>
-  </div>
+  <main class="overlay">
+
+    <!-- Broadcast header -->
+    <header class="broadcast-header">
+      <div class="brand-mark">
+        <span class="brand-icon">BB</span>
+        <div class="brand-copy">
+          <span class="eyebrow">LIVE BREAK</span>
+          <h1>BOX BREAK <span>LIVE</span></h1>
+        </div>
+      </div>
+
+      <!-- Replace this placeholder with your friend's logo later -->
+      <div class="partner-logo" id="partner-logo">
+        <span>YOUR LOGO HERE</span>
+      </div>
+
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        LIVE
+      </div>
+    </header>
+
+    <!-- Pack and break information -->
+    <section class="info-panel">
+      <div class="info-card pack-card">
+        <span class="info-label">CURRENT PACK</span>
+        <strong id="pack_display">—</strong>
+      </div>
+
+      <div class="info-card hit-card">
+        <span class="info-label">LAST HIT</span>
+        <strong id="last_hit_display">Waiting for a hit...</strong>
+      </div>
+
+      <div class="info-card remaining-card">
+        <span class="info-label">TEAMS AVAILABLE</span>
+        <strong id="remaining_display">32 / 32</strong>
+      </div>
+    </section>
+
+    <!-- Team grid -->
+    <section class="teams-section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">THE LINEUP</span>
+          <h2>TEAM BOARD</h2>
+        </div>
+        <span class="section-note">NFL • ALL 32 TEAMS</span>
+      </div>
+
+      <div id="teams-container" class="teams-grid"></div>
+    </section>
+
+    <!-- Big Hit animation layer -->
+    <div id="big_hit_overlay" class="big-hit-overlay" aria-hidden="true">
+      <div class="hit-flash"></div>
+      <div class="hit-rays"></div>
+      <div class="hit-content">
+        <div class="hit-kicker">🔥 THE BREAKER 🔥</div>
+        <div id="big_hit_display">BIG HIT!</div>
+        <div id="big_hit_subtitle">MONSTER PULL</div>
+      </div>
+    </div>
+
+  </main>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
   <script>
     const socket = io();
 
+    const teamLogos = {
+      "Cardinals": "ari",
+      "Falcons": "atl",
+      "Ravens": "bal",
+      "Bills": "buf",
+      "Panthers": "car",
+      "Bears": "chi",
+      "Bengals": "cin",
+      "Browns": "cle",
+      "Cowboys": "dal",
+      "Broncos": "den",
+      "Lions": "det",
+      "Packers": "gb",
+      "Texans": "hou",
+      "Colts": "ind",
+      "Jaguars": "jax",
+      "Chiefs": "kc",
+      "Raiders": "lv",
+      "Chargers": "lac",
+      "Rams": "lar",
+      "Dolphins": "mia",
+      "Vikings": "min",
+      "Patriots": "ne",
+      "Saints": "no",
+      "Giants": "nyg",
+      "Jets": "nyj",
+      "Eagles": "phi",
+      "Steelers": "pit",
+      "49ers": "sf",
+      "Seahawks": "sea",
+      "Buccaneers": "tb",
+      "Titans": "ten",
+      "Commanders": "wsh"
+    };
+
+    const logoBase =
+      "https://a.espncdn.com/i/teamlogos/nfl/500/";
+
+    let hitTimer = null;
+
     function renderTeams(teams) {
-      const container = document.getElementById('teams-container');
+      const container = document.getElementById("teams-container");
       container.innerHTML = "";
 
-      for (const team in teams) {
-        const t = teams[team];
-        const div = document.createElement("div");
-        div.className = "team";
-        div.innerText = t.sold ? `${team} - ${t.buyer}` : team;
-        div.style.color = t.sold ? "lime" : "white";
-        container.appendChild(div);
+      for (const [name, team] of Object.entries(teams)) {
+        const card = document.createElement("div");
+        card.className = "team-card" + (team.sold ? " sold" : "");
+
+        const logoWrap = document.createElement("div");
+        logoWrap.className = "team-logo-wrap";
+
+        const img = document.createElement("img");
+        img.className = "team-logo";
+        img.alt = name + " logo";
+        img.loading = "eager";
+
+        const abbreviation = teamLogos[name];
+
+        if (abbreviation) {
+          img.src = logoBase + abbreviation + ".png";
+        }
+
+        const fallback = document.createElement("span");
+        fallback.className = "team-fallback";
+        fallback.textContent = abbreviation
+          ? abbreviation.toUpperCase()
+          : name.slice(0, 3).toUpperCase();
+
+        img.onerror = () => {
+          img.style.display = "none";
+          fallback.style.display = "flex";
+        };
+
+        logoWrap.append(img, fallback);
+
+        const teamName = document.createElement("div");
+        teamName.className = "team-name";
+        teamName.textContent = name;
+
+        const status = document.createElement("div");
+        status.className = "team-status";
+        status.textContent = team.sold ? "SOLD" : "AVAILABLE";
+
+        const buyer = document.createElement("div");
+        buyer.className = "team-buyer";
+        buyer.textContent = team.sold ? team.buyer : "";
+
+        card.append(logoWrap, teamName, status, buyer);
+        container.appendChild(card);
       }
     }
 
-    socket.on('update', payload => {
-      renderTeams(payload.teams);
+    function playBigHit(lastHit) {
+      const layer = document.getElementById("big_hit_overlay");
+      const title = document.getElementById("big_hit_display");
+      const subtitle = document.getElementById("big_hit_subtitle");
 
-      document.getElementById('pack_display').innerText =
-        "Pack: " + (payload.data.pack || "");
-      document.getElementById('last_hit_display').innerText =
-        "Last Hit: " + (payload.data.last_hit || "");
-      document.getElementById('remaining_display').innerText =
-        "Remaining: " + payload.remaining;
+      clearTimeout(hitTimer);
 
-      if (payload.data.big_hit) {
-        const bh = document.getElementById('big_hit_display');
-        bh.style.display = "block";
-        bh.classList.remove("pop");
-        void bh.offsetWidth;
-        bh.classList.add("pop");
+      title.textContent = "BIG HIT!";
+      subtitle.textContent = lastHit || "MONSTER PULL";
 
-        confetti({
-          particleCount: 150,
-          spread: 100
-        });
+      layer.classList.remove("active");
+      void layer.offsetWidth;
+      layer.classList.add("active");
+      layer.setAttribute("aria-hidden", "false");
 
-        setTimeout(() => {
-          bh.style.display = "none";
-          bh.classList.remove("pop");
-        }, 3000);
+      if (typeof confetti === "function") {
+        const end = Date.now() + 1800;
+
+        (function burst() {
+          confetti({
+            particleCount: 7,
+            angle: 60,
+            spread: 65,
+            startVelocity: 55,
+            origin: { x: 0, y: 0.65 },
+            colors: ["#ff253a", "#ffffff", "#00b7ff", "#ffc857"]
+          });
+
+          confetti({
+            particleCount: 7,
+            angle: 120,
+            spread: 65,
+            startVelocity: 55,
+            origin: { x: 1, y: 0.65 },
+            colors: ["#ff253a", "#ffffff", "#00b7ff", "#ffc857"]
+          });
+
+          if (Date.now() < end) {
+            requestAnimationFrame(burst);
+          }
+        })();
       }
+
+      hitTimer = setTimeout(() => {
+        layer.classList.remove("active");
+        layer.setAttribute("aria-hidden", "true");
+      }, 3200);
+    }
+
+    socket.on("update", payload => {
+      if (payload.teams) {
+        renderTeams(payload.teams);
+      }
+
+      const data = payload.data || {};
+
+      document.getElementById("pack_display").textContent =
+        data.pack || "—";
+
+      document.getElementById("last_hit_display").textContent =
+        data.last_hit || "Waiting for a hit...";
+
+      document.getElementById("remaining_display").textContent =
+        `${payload.remaining ?? 32} / 32`;
+
+      if (data.big_hit) {
+        playBigHit(data.last_hit);
+      }
+    });
+
+    socket.on("connect", () => {
+      document.body.classList.add("connected");
+    });
+
+    socket.on("disconnect", () => {
+      document.body.classList.remove("connected");
     });
   </script>
 </body>
