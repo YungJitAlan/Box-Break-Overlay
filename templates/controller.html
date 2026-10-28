@@ -28,6 +28,9 @@
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script>
     const socket = io();
+    socket.on("connect", () => console.log("SOCKET CONNECTED:", socket.id));
+    socket.on("disconnect", reason => console.log("SOCKET DISCONNECTED:", reason));
+    socket.on("connect_error", error => console.error("SOCKET ERROR:", error.message));
     const teams = {{ teams | tojson }};
 
     function renderTeams(teams) {
